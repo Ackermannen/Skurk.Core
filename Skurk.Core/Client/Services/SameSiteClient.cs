@@ -9,6 +9,5 @@
             _client = client;
         }
 
-        public 
     }
 }
