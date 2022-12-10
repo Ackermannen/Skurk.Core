@@ -13,4 +13,5 @@ namespace Skurk.Core.Client.State.Store.HandleTime
     public record AddRowAction();
     public record DeleteRowAction(DeleteTimeTaskCommand Command);
     public record ChangeWeekAction(WeekDto Week);
+    public record IsLoadingDateAction(bool IsLoadingDate);
 }

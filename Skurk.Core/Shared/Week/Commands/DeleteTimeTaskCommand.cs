@@ -1,4 +1,4 @@
-﻿using Skurk.Core.Shared.Mediator;
+﻿using Skurk.Core.Shared.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;

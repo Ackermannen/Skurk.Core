@@ -1,6 +1,6 @@
 ﻿using MediatR;
+using Skurk.Core.Shared.Common;
 using Skurk.Core.Shared.Interfaces;
-using Skurk.Core.Shared.Mediator;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +15,9 @@ namespace Skurk.Core.Shared.Orders.Commands
         public required string Description { get; set; } = string.Empty;
     }
 
-    public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, CommandResult<Guid>>
+    public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, RequestResult<Guid>>
     {
-        public Task<CommandResult<Guid>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+        public Task<RequestResult<Guid>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }

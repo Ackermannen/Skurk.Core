@@ -15,6 +15,8 @@ namespace Skurk.Core.Client.State.Store.HandleTime
         {
         }
 
+        public bool IsLoadingDate { get; set; }
+
         public DateOnly Date { get; set; } = DateOnly.MinValue;
 
         public WeekDto Week { get; set; } = new WeekDto();

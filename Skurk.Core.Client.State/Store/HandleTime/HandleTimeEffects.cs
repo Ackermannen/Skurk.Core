@@ -25,8 +25,10 @@ namespace Skurk.Core.Client.State.Store.HandleTime
         [EffectMethod]
         public async Task HandleSetDateAction(SetDateAction action, IDispatcher dispatcher)
         {
+            dispatcher.Dispatch(new IsLoadingDateAction(true));
             var newWeek = await _client.Send(action.Query);
             dispatcher.Dispatch(new ChangeWeekAction(newWeek));
+            dispatcher.Dispatch(new IsLoadingDateAction(false));
         }
     }
 }

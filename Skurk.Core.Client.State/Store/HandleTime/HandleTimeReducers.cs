@@ -14,6 +14,18 @@ namespace Skurk.Core.Client.State.Store.HandleTime
     {
 
         [ReducerMethod]
+        public static HandleTimeState ReduceIsLoadingDateAction(HandleTimeState state, IsLoadingDateAction action) => state with
+        {
+            IsLoadingDate = action.IsLoadingDate,
+        };
+
+        [ReducerMethod]
+        public static HandleTimeState ReduceChangeWeekAction(HandleTimeState state, ChangeWeekAction action) => state with
+        {
+            Week = action.Week,
+        };
+
+        [ReducerMethod]
         public static HandleTimeState ReduceSetDateAction(HandleTimeState state, SetDateAction action) => state with
         {
             Date = action.Query.Date,

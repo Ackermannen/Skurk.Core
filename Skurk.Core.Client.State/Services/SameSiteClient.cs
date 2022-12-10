@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using MudBlazor;
+using Skurk.Core.Shared.Common;
 using Skurk.Core.Shared.Interfaces;
-using Skurk.Core.Shared.Mediator;
 using System.Net;
 
 namespace Skurk.Core.Client.State.Services
@@ -19,31 +19,48 @@ namespace Skurk.Core.Client.State.Services
             _snackbar = snackbar;
         }
 
-        public async Task<R> Send<R>(IMediatorRequest<CommandResult<R>> request, CancellationToken ct = default!)
+        public async Task<R> Send<R>(IMediatorRequest<RequestResult<R>> request, CancellationToken ct = default!)
         {
             var res = await request.Send(_client, _routeFinder, ct);
-            if(res.IsSuccess)
-            {
-                _snackbar.Add(res.HttpStatusCode == HttpStatusCode.Created ? "Created" : "Success", Severity.Success);
-            } 
-            else
-            {
-                _snackbar.Add(res.FailureReason, res.HttpStatusCode == HttpStatusCode.BadRequest ? Severity.Warning : Severity.Error);
-            }
-            return res.Value;
-        }
 
-        public async Task<R> Send<R>(IMediatorRequest<QueryResult<R>> request, CancellationToken ct = default!)
-        {
-            var res = await request.Send(_client, _routeFinder, ct);
-            if (res.IsSuccess)
+            string msg;
+            Severity svr;
+            switch(res.HttpStatusCode)
             {
-                _snackbar.Add(res.HttpStatusCode == HttpStatusCode.NoContent ? "No item(s)" : "Success", Severity.Success);
+                case HttpStatusCode.OK:
+                    msg = "Executed successfully";
+                    svr = Severity.Success;
+                    break;
+                case HttpStatusCode.Unauthorized:
+                    msg = "Unathorization needed";
+                    svr = Severity.Warning;
+                    break;
+                case HttpStatusCode.Forbidden:
+                    msg = "Permission missing";
+                    svr= Severity.Warning;
+                    break;
+                case HttpStatusCode.BadRequest:
+                    msg = "Request rejected";
+                    svr = Severity.Error;
+                    break;
+                case HttpStatusCode.InternalServerError:
+                    msg = "Server error";
+                    svr = Severity.Error;
+                    break;
+                case HttpStatusCode.Created:
+                    msg = "Created successfully";
+                    svr = Severity.Success;
+                    break;
+                case HttpStatusCode.NoContent:
+                    msg = "No content available";
+                    svr = Severity.Info;
+                    break;
+                default:
+                    msg = "Odd status received";
+                    svr = Severity.Info;
+                    break;
             }
-            else
-            {
-                _snackbar.Add(res.FailureReason, Severity.Error);
-            }
+            _snackbar.Add(msg, svr);
             return res.Value;
         }
     }

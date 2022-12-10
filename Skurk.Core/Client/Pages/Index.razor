@@ -1,30 +1,96 @@
 ﻿@page "/"
+@using Skurk.Core.Shared.Week;
 @inherits FluxorComponent
 @inject IDispatcher _dispatcher
+@inject ISnackbar _snackbar;
 @inject IState<HandleTimeState> _handleTimeState
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world! Current date is @_handleTimeState.Value.Date</h1>
+<MudText Typo="Typo.h3">Hello, world! The current date is
+    
+        @if (_handleTimeState.Value.IsLoadingDate)
+        {
+            <MudSkeleton Class="d-inline-block" Width="200px" />
+        }
+        else
+        {
+            @_handleTimeState.Value.Date
+        }
+</MudText>
 
-Welcome to your new app.
-
-<SurveyPrompt Title="How is Blazor working for you?" />
+<MudTable Items="@_handleTimeState.Value.Week.TimeTasks" Dense="false" Hover="true" CanCancelEdit="@true"
+          @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Save row"
+          OnCommitEditClick="@(() => _snackbar.Add("Updating row", Severity.Info))" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
+          RowEditCommit="ItemHasBeenCommitted" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Tidsrapport</MudText>
+        <MudSpacer />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.TaskId)">Task</MudTableSortLabel></MudTh>
+        @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+        {
+            <MudTh><MudTableSortLabel SortBy="new Func<TimeTaskDto, object>(x=>x.Times[dayNr])">@_handleTimeState.Value.Week.StartDay.AddDays(dayNr).ToString("MMM")</MudTableSortLabel></MudTh>
+        }
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="TaskId">@context.TaskId</MudTd>
+        @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+        {
+            <MudTd DataLabel="@_handleTimeState.Value.Week.StartDay.AddDays(dayNr).ToString("MMM")">@context.Times[dayNr]</MudTd>
+        }
+    </RowTemplate>
+    <RowEditingTemplate>
+        <MudTd DataLabel="TaskId">@context.TaskId</MudTd>
+        @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+        {
+            <MudTd DataLabel="@_handleTimeState.Value.Week.StartDay.AddDays(dayNr).ToString("MMM")">
+                <MudNumericField @bind-Value="@context.Times[dayNr]" Required />
+            </MudTd>
+        }
+    </RowEditingTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+    <EditButtonContent Context="button">
+        <MudIconButton Size="@Size.Small" Icon="@Icons.Outlined.Edit" Class="pa-0" OnClick="@button.ButtonAction" Disabled="@button.ButtonDisabled" />
+    </EditButtonContent>
+</MudTable>
 
 @code {
+    private TimeTaskDto selectedItem = default!;
+    private TimeTaskDto elementBeforeEdit = default!;
+    private TableEditTrigger editTrigger = TableEditTrigger.RowClick;
+
     protected override async Task OnInitializedAsync()
     {
-        //var res = await _client.Send<Guid>(new CreateOrderCommand
-        //    {
-        //        Title = "Bread",
-        //        Description = "And a bunch of butter",
-        //    });
-
         _dispatcher.Dispatch(new SetDateAction(new GetWeekQuery
             {
                 Date = DateOnly.FromDateTime(DateTime.Now)
             }));
+    }
 
-        await base.OnInitializedAsync();
+    private void BackupItem(object obj)
+    {
+        var element = (TimeTaskDto)obj;
+        elementBeforeEdit = new()
+        {
+            Id = element.Id,
+            TaskId = element.TaskId,
+            Times = element.Times,
+        };
+    }
+
+    private void ItemHasBeenCommitted(object element)
+    {
+    }
+
+    private void ResetItemToOriginalValues(object obj)
+    {
+        var element = (TimeTaskDto)obj;
+        element.Id = elementBeforeEdit.Id;
+        element.TaskId = elementBeforeEdit.TaskId;
+        element.Times = elementBeforeEdit.Times;
     }
 }
