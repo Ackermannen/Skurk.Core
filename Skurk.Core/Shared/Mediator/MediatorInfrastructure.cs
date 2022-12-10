@@ -24,13 +24,6 @@ namespace Skurk.Core.Shared.Mediator
 
         public static async Task<QueryResult<TResponse>> SendQueryStringExpectQuery<TResponse>(string url, string queryString, Func<string, CancellationToken, Task<HttpResponseMessage>> callback, CancellationToken ct = default)
         {
-            if (string.IsNullOrEmpty(url))
-            {
-                return QueryResult<TResponse>.Fail("An error occured",
-                     QueryFailureHttpStatusCode.InternalServerError,
-                     new InvalidOperationException("Route is not registered in assembly"));
-            }
-
             int lastSlash = url.LastIndexOf('/');
             url = (lastSlash > -1) ? url.Substring(0, lastSlash) : url;
 
@@ -65,13 +58,6 @@ namespace Skurk.Core.Shared.Mediator
 
         public static async Task<CommandResult<TResponse>> SendQueryStringExpectCommand<TResponse>(string url, string queryString, Func<string, CancellationToken, Task<HttpResponseMessage>> callback, CancellationToken ct = default)
         {
-            if (string.IsNullOrEmpty(url))
-            {
-                return CommandResult<TResponse>.Fail("An error occured",
-                     CommandFailureHttpStatusCode.InternalServerError,
-                     new InvalidOperationException("Route is not registered in assembly"));
-            }
-
             int lastSlash = url.LastIndexOf('/');
             url = (lastSlash > -1) ? url.Substring(0, lastSlash) : url;
 
@@ -106,13 +92,6 @@ namespace Skurk.Core.Shared.Mediator
 
         public static async Task<CommandResult<TResponse>> SendBodyExpectCommand<TResponse>(string url, StringContent stringContent, Func<string, StringContent, CancellationToken, Task<HttpResponseMessage>> callback, CancellationToken ct = default)
         {
-            if (string.IsNullOrEmpty(url))
-            {
-                return CommandResult<TResponse>.Fail("An error occured",
-                     CommandFailureHttpStatusCode.InternalServerError,
-                     new InvalidOperationException("Route is not registered in assembly"));
-            }
-
             HttpResponseMessage res;
             try
             {
@@ -147,7 +126,17 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<CommandResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
+            string url;
+            try
+            {
+                url = routeFinder.RequestRoutes[GetType().Name];
+            } catch
+            {
+                return CommandResult<TResponse>.Fail("An error occured",
+                        CommandFailureHttpStatusCode.InternalServerError,
+                        new InvalidOperationException("Route is not registered in assembly"));
+            }
+
             var content = new StringContent(JsonConvert.SerializeObject(this));
             return await RequestHelper.SendBodyExpectCommand<TResponse>(url,
                 content,
@@ -160,7 +149,18 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<CommandResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
+            string url;
+            try
+            {
+                url = routeFinder.RequestRoutes[GetType().Name];
+            }
+            catch
+            {
+                return CommandResult<TResponse>.Fail("An error occured",
+                        CommandFailureHttpStatusCode.InternalServerError,
+                        new InvalidOperationException("Route is not registered in assembly"));
+            }
+
             var content = new StringContent(JsonConvert.SerializeObject(this));
             return await RequestHelper.SendBodyExpectCommand<TResponse>(url,
                 content,
@@ -173,7 +173,18 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<CommandResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
+            string url;
+            try
+            {
+                url = routeFinder.RequestRoutes[GetType().Name];
+            }
+            catch
+            {
+                return CommandResult<TResponse>.Fail("An error occured",
+                        CommandFailureHttpStatusCode.InternalServerError,
+                        new InvalidOperationException("Route is not registered in assembly"));
+            }
+
             var queryString = RequestHelper.BuildQueryString(this);
             return await RequestHelper.SendQueryStringExpectCommand<TResponse>(url,
                 queryString,
@@ -186,7 +197,7 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<QueryResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
+            var url = routeFinder.RequestRoutes.First(x => GetType().Name == x.Key).Value;
             var queryString = RequestHelper.BuildQueryString(this);
             return await RequestHelper.SendQueryStringExpectQuery<TResponse>(url,
                 queryString,
