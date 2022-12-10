@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Skurk.Core.Shared.Interfaces;
 using Skurk.Core.Shared.Mediator;
 using System;
 using System.Collections.Generic;

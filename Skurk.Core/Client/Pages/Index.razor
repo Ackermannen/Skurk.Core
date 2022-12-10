@@ -1,4 +1,8 @@
 ﻿@page "/"
+@inherits FluxorComponent
+@inject SameSiteClient _client
+@inject IDispatcher _dispatcher
+@inject IState<OrdersState> _ordersState
 
 <PageTitle>Index</PageTitle>
 
@@ -7,3 +11,18 @@
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        //var res = await _client.Send<Guid>(new CreateOrderCommand
+        //    {
+        //        Title = "Bread",
+        //        Description = "And a bunch of butter",
+        //    });
+
+        //_dispatcher.Dispatch()
+
+        await base.OnInitializedAsync();
+    }
+}

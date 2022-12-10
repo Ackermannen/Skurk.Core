@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Newtonsoft.Json;
+using Skurk.Core.Shared.Enums;
 using Skurk.Core.Shared.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -12,16 +13,6 @@ using System.Web;
 
 namespace Skurk.Core.Shared.Mediator
 {
-    public interface IQuery<TResponse> : IRequest<TResponse>
-    {
-        public Task<TResponse> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default);
-    }
-
-    public interface ICommand<TResponse> : IRequest<TResponse>
-    {
-        public Task<TResponse> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default);
-    }
-
     internal static class RequestHelper
     {
         public static string BuildQueryString<T>(T obj) where T : class
@@ -39,6 +30,9 @@ namespace Skurk.Core.Shared.Mediator
                      QueryFailureHttpStatusCode.InternalServerError,
                      new InvalidOperationException("Route is not registered in assembly"));
             }
+
+            int lastSlash = url.LastIndexOf('/');
+            url = (lastSlash > -1) ? url.Substring(0, lastSlash) : url;
 
             HttpResponseMessage res;
             try
@@ -77,6 +71,9 @@ namespace Skurk.Core.Shared.Mediator
                      CommandFailureHttpStatusCode.InternalServerError,
                      new InvalidOperationException("Route is not registered in assembly"));
             }
+
+            int lastSlash = url.LastIndexOf('/');
+            url = (lastSlash > -1) ? url.Substring(0, lastSlash) : url;
 
             HttpResponseMessage res;
             try
@@ -196,50 +193,6 @@ namespace Skurk.Core.Shared.Mediator
                 new Func<string, CancellationToken, Task<HttpResponseMessage>>(client.GetAsync),
                 ct);
         }
-    }
-
-    public interface IQueryHandler<in TRequest, TResponse> : IRequestHandler<TRequest, TResponse> where TRequest : IQuery<TResponse>
-    {
-
-    }
-
-    public interface ICommandHandler<in TRequest, TResponse> : IRequestHandler<TRequest, TResponse> where TRequest : ICommand<TResponse>
-    {
-
-    }
-
-    public enum CommandFailureHttpStatusCode
-    {
-        /// <summary>Http status code used when bad input data is received.</summary>
-        BadRequest = 400,
-        /// <summary>Http status code used when the user tries accessing forbidden resources.</summary>
-        Forbidden = 403,
-        /// <summary>Http status code used when the server has an internal error.</summary>
-        InternalServerError = 500,
-    }
-
-    public enum CommandSuccessHttpStatusCode
-    {
-        /// <summary>Http status code used when a reqest was successful.</summary>
-        OK = 200,
-        /// <summary>Http status code used when a new resource was created successfully</summary>
-        Created = 201,
-    }
-
-    public enum QueryFailureHttpStatusCode
-    {
-        /// <summary>Http status code used when the user tries accessing forbidden resources.</summary>
-        Forbidden = 403,
-        /// <summary>Http status code used when the server has an internal error.</summary>
-        InternalServerError = 500,
-    }
-
-    public enum QuerySuccessHttpStatusCode
-    {
-        /// <summary>Http status code used when a reqest was successful.</summary>
-        OK = 200,
-        /// <summary>Http status code used when a process was executed correctly, but contained no content.</summary>
-        NoContent = 204,
     }
 
     public abstract record MediatorResult<TResponse, TSuccessStatusCodes, TFailureStatusCodes>

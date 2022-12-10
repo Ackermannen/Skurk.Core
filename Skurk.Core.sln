@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33122.133
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skurk.Core.Server", "Skurk.Core\Server\Skurk.Core.Server.csproj", "{EF4FD1BB-445C-42C5-A482-2FC54CE60355}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Skurk.Core.Server", "Skurk.Core\Server\Skurk.Core.Server.csproj", "{EF4FD1BB-445C-42C5-A482-2FC54CE60355}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skurk.Core.Client", "Skurk.Core\Client\Skurk.Core.Client.csproj", "{1CEE8D42-0EF5-423A-9635-920C9C98B183}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Skurk.Core.Client", "Skurk.Core\Client\Skurk.Core.Client.csproj", "{1CEE8D42-0EF5-423A-9635-920C9C98B183}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skurk.Core.Shared", "Skurk.Core\Shared\Skurk.Core.Shared.csproj", "{46F7B60C-411E-4EEC-9BE0-F5F87303EE9C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Skurk.Core.Shared", "Skurk.Core\Shared\Skurk.Core.Shared.csproj", "{46F7B60C-411E-4EEC-9BE0-F5F87303EE9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skurk.Core.Infrastructure", "Skurk.Core.Infrastructure\Skurk.Core.Infrastructure.csproj", "{763BE692-CA63-4CD8-898A-6208CD847ABA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Skurk.Core.Infrastructure", "Skurk.Core.Infrastructure\Skurk.Core.Infrastructure.csproj", "{763BE692-CA63-4CD8-898A-6208CD847ABA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skurk.Core.Client.State", "Skurk.Core.Client.State\Skurk.Core.Client.State.csproj", "{03DBB23B-DB4C-4684-BF4D-1EE93596573B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{763BE692-CA63-4CD8-898A-6208CD847ABA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{763BE692-CA63-4CD8-898A-6208CD847ABA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{763BE692-CA63-4CD8-898A-6208CD847ABA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03DBB23B-DB4C-4684-BF4D-1EE93596573B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03DBB23B-DB4C-4684-BF4D-1EE93596573B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03DBB23B-DB4C-4684-BF4D-1EE93596573B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03DBB23B-DB4C-4684-BF4D-1EE93596573B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
