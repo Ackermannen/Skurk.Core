@@ -147,7 +147,7 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<CommandResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.First(x => GetType().Name == x.Key).Value;
+            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
             var content = new StringContent(JsonConvert.SerializeObject(this));
             return await RequestHelper.SendBodyExpectCommand<TResponse>(url,
                 content,
@@ -160,7 +160,7 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<CommandResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.First(x => GetType().Name == x.Key).Value;
+            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
             var content = new StringContent(JsonConvert.SerializeObject(this));
             return await RequestHelper.SendBodyExpectCommand<TResponse>(url,
                 content,
@@ -173,7 +173,7 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<CommandResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.First(x => GetType().Name == x.Key).Value;
+            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
             var queryString = RequestHelper.BuildQueryString(this);
             return await RequestHelper.SendQueryStringExpectCommand<TResponse>(url,
                 queryString,
@@ -186,7 +186,7 @@ namespace Skurk.Core.Shared.Mediator
     {
         public async Task<QueryResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.First(x => GetType().Name == x.Key).Value;
+            var url = routeFinder.RequestRoutes.FirstOrDefault(x => GetType().Name == x.Key).Value;
             var queryString = RequestHelper.BuildQueryString(this);
             return await RequestHelper.SendQueryStringExpectQuery<TResponse>(url,
                 queryString,

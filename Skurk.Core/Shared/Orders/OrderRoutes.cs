@@ -14,10 +14,8 @@ namespace Skurk.Core.Shared.Orders
     /// </summary>
     public static class OrderRoutes
     {
-        #region Orders
         public const string CreateOrderCommand = "/Orders/";
         public const string DeleteOrderCommand = "/Orders/";
         public const string GetOrdersPaginatedQuery = "/Orders/";
-        #endregion
     }
 }

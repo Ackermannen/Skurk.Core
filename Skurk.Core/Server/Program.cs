@@ -1,18 +1,22 @@
+using MediatR;
 using Microsoft.AspNetCore.ResponseCompression;
+using Skurk.Core.Shared.Week;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddNewtonsoftJson();
 builder.Services.AddRazorPages();
+builder.Services.AddMediatR(new Assembly[] { Assembly.GetExecutingAssembly(), typeof(WeekDto).Assembly });
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseWebAssemblyDebugging();
+    app.UseWebAssemblyDebugging();  
 }
 else
 {

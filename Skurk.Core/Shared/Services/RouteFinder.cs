@@ -1,4 +1,5 @@
 ﻿using Skurk.Core.Shared.Orders;
+using Skurk.Core.Shared.Week;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,11 @@ namespace Skurk.Core.Shared.Interfaces
 
         public RouteFinder()
         {
-            RequestRoutes = typeof(OrderRoutes).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            var orderRoutes = typeof(OrderRoutes).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string))
+            .ToDictionary(x => x.Name, y => (string)y.GetRawConstantValue()!);
+
+            RequestRoutes = typeof(WeekRoutes).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             .Where(fi => fi.IsLiteral && !fi.IsInitOnly && fi.FieldType == typeof(string))
             .ToDictionary(x => x.Name, y => (string)y.GetRawConstantValue()!);
         }
