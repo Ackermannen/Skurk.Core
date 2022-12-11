@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -22,28 +23,22 @@ namespace Skurk.Core.Shared.Common
             return $"?{string.Join('&', props.Where(x => x.GetValue(obj) != null).Select(x => $"{HttpUtility.UrlEncode(x.Name)}={HttpUtility.UrlEncode(x.GetValue(obj)!.ToString())}"))}";
         }
 
-        public static async Task<RequestResult<TResponse>> SendAsQuery<TResponse>(string url, string queryString, Func<string, CancellationToken, Task<HttpResponseMessage>> callback, CancellationToken ct = default)
+        private static async Task<RequestResult<TResponse>> ParseData<TResponse>(HttpResponseMessage res, CancellationToken ct)
         {
-            //int lastSlash = url.LastIndexOf('/');
-            //url = lastSlash > -1 ? url.Substring(0, lastSlash) : url;
-
-            HttpResponseMessage res;
             try
             {
-                res = await callback.Invoke(url + queryString, ct);
-            }
-            catch (Exception e)
-            {
-                return RequestResult<TResponse>.Fail("Error contacting the server", FailureHttpStatusCode.InternalServerError, e);
-            }
-
-            try
-            {
-                var deserializedResult = System.Text.Json.JsonSerializer.Deserialize<RequestResult<TResponse>>(await res.Content.ReadAsStreamAsync(ct));
+                var deserializedResult = JsonConvert.DeserializeObject<JsonResponseValue>(await res.Content.ReadAsStringAsync(ct));
                 if (deserializedResult != default)
                 {
-                    deserializedResult.HttpStatusCode = res.StatusCode;
-                    return deserializedResult;
+                    var deserierializedValue = JsonConvert.DeserializeObject<TResponse>(deserializedResult.Value);
+                    if (deserierializedValue != null)
+                    {
+                        return RequestResult<TResponse>.Success(deserierializedValue, res.StatusCode);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Response values aren't parsable");
+                    }
                 }
                 else
                 {
@@ -52,9 +47,23 @@ namespace Skurk.Core.Shared.Common
             }
             catch (Exception e)
             {
-                var statusCode = Enum.IsDefined(typeof(FailureHttpStatusCode), (int)res.StatusCode) ? (FailureHttpStatusCode)res.StatusCode : FailureHttpStatusCode.InternalServerError;
-                return RequestResult<TResponse>.Fail("Unrecognizable object format", statusCode, e);
+                return RequestResult<TResponse>.Fail("Unrecognizable object format", res.StatusCode, e);
             }
+        }
+
+        public static async Task<RequestResult<TResponse>> SendAsQuery<TResponse>(string url, string queryString, Func<string, CancellationToken, Task<HttpResponseMessage>> callback, CancellationToken ct = default)
+        {
+            HttpResponseMessage res;
+            try
+            {
+                res = await callback.Invoke(url + queryString, ct);
+            }
+            catch (Exception e)
+            {
+                return RequestResult<TResponse>.Fail("Error contacting the server", HttpStatusCode.InternalServerError, e);
+            }
+
+            return await ParseData<TResponse>(res, ct);
         }
 
         public static async Task<RequestResult<TResponse>> SendAsBody<TResponse>(string url, StringContent stringContent, Func<string, StringContent, CancellationToken, Task<HttpResponseMessage>> callback, CancellationToken ct = default)
@@ -66,28 +75,10 @@ namespace Skurk.Core.Shared.Common
             }
             catch (Exception e)
             {
-                return RequestResult<TResponse>.Fail("Error contacting the server", FailureHttpStatusCode.InternalServerError, e);
+                return RequestResult<TResponse>.Fail("Error contacting the server", HttpStatusCode.InternalServerError, e);
             }
 
-
-            try
-            {
-                var deserializedResult = JsonConvert.DeserializeObject<RequestResult<TResponse>>(await res.Content.ReadAsStringAsync(ct));
-                if (deserializedResult != null)
-                {
-                    deserializedResult.HttpStatusCode = res.StatusCode;
-                    return deserializedResult;
-                }
-                else
-                {
-                    throw new InvalidOperationException("Response data isn't parsable");
-                }
-            }
-            catch (Exception e)
-            {
-                var statusCode = Enum.IsDefined(typeof(FailureHttpStatusCode), (int)res.StatusCode) ? (FailureHttpStatusCode)res.StatusCode : FailureHttpStatusCode.InternalServerError;
-                return RequestResult<TResponse>.Fail("Unrecognizable object format", statusCode, e);
-            }
+            return await ParseData<TResponse>(res, ct);
         }
     }
 
@@ -103,7 +94,7 @@ namespace Skurk.Core.Shared.Common
             catch
             {
                 return RequestResult<TResponse>.Fail("An error occured",
-                        FailureHttpStatusCode.InternalServerError,
+                        HttpStatusCode.InternalServerError,
                         new InvalidOperationException("Route is not registered in assembly"));
             }
 
@@ -127,7 +118,7 @@ namespace Skurk.Core.Shared.Common
             catch
             {
                 return RequestResult<TResponse>.Fail("An error occured",
-                        FailureHttpStatusCode.InternalServerError,
+                        HttpStatusCode.InternalServerError,
                         new InvalidOperationException("Route is not registered in assembly"));
             }
 
@@ -151,7 +142,7 @@ namespace Skurk.Core.Shared.Common
             catch
             {
                 return RequestResult<TResponse>.Fail("An error occured",
-                        FailureHttpStatusCode.InternalServerError,
+                        HttpStatusCode.InternalServerError,
                         new InvalidOperationException("Route is not registered in assembly"));
             }
 
@@ -167,7 +158,18 @@ namespace Skurk.Core.Shared.Common
     {
         public async Task<RequestResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
         {
-            var url = routeFinder.RequestRoutes.First(x => GetType().Name == x.Key).Value;
+            string url;
+            try
+            {
+                url = routeFinder.RequestRoutes[GetType().Name];
+            }
+            catch
+            {
+                return RequestResult<TResponse>.Fail("An error occured",
+                        HttpStatusCode.InternalServerError,
+                        new InvalidOperationException("Route is not registered in assembly"));
+            }
+
             var queryString = RequestHelper.BuildQueryString(this);
             return await RequestHelper.SendAsQuery<TResponse>(url,
                 queryString,
@@ -176,9 +178,18 @@ namespace Skurk.Core.Shared.Common
         }
     }
 
+    internal record JsonResponseValue
+    {
+        public string Value { get; set; } = default!;
+    }
+
     public record RequestResult<TResponse>
     {
+        [JsonIgnore]
         public TResponse Value { get; set; } = default!;
+
+        [JsonProperty("value")]
+        private string _stringifiedValue => JsonConvert.SerializeObject(Value);
         public string FailureReason { get; protected set; } = string.Empty;
         [JsonIgnore] public HttpStatusCode HttpStatusCode { get; set; }
         public bool IsSuccess => string.IsNullOrEmpty(FailureReason);
@@ -196,17 +207,17 @@ namespace Skurk.Core.Shared.Common
             return result.IsSuccess;
         }
 
-        public static RequestResult<TResponse> Fail(string reason, FailureHttpStatusCode statusCode, Exception exception) => new RequestResult<TResponse>
+        public static RequestResult<TResponse> Fail(string reason, HttpStatusCode statusCode, Exception exception) => new()
         {
-            HttpStatusCode = (HttpStatusCode)statusCode,
+            HttpStatusCode = statusCode,
             FailureReason = reason,
             _storedException = exception,
         };
 
-        public static RequestResult<TResponse> Success(TResponse value, SuccessHttpStatusCode statusCode) => new RequestResult<TResponse>
+        public static RequestResult<TResponse> Success(TResponse value, HttpStatusCode statusCode) => new()
         {
             Value = value,
-            HttpStatusCode = (HttpStatusCode)statusCode
+            HttpStatusCode = statusCode
         };
     }
 }

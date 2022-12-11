@@ -10,15 +10,6 @@ namespace Skurk.Core.Shared.Week
     {
         public required Guid Id { get; set; }
         public required Guid TaskId { get; set; }
-
-        private float[] _times;
-        public required float[] Times 
-        { 
-            get { return _times; } 
-            set {
-                // Rounds the Time to the nearest quarter.
-                _times = value.Select(x => (float) Math.Round((decimal)x * 4, MidpointRounding.ToEven) / 4).ToArray();
-            } 
-        }
+        public required float[] Times { get; set; }
     }
 }

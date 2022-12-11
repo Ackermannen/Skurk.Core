@@ -27,26 +27,37 @@
         <MudText Typo="Typo.h6">Tidsrapport</MudText>
         <MudSpacer />
     </ToolBarContent>
-    <HeaderContent>
-        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.TaskId)">Task</MudTableSortLabel></MudTh>
+    <ColGroup>
+        <col style="width:350px" />
         @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
         {
-            <MudTh><MudTableSortLabel SortBy="new Func<TimeTaskDto, object>(x=>x.Times[dayNr])">@_handleTimeState.Value.Week.StartDay.AddDays(dayNr).ToString("MMM")</MudTableSortLabel></MudTh>
+            <col />
         }
+        <col style="width:50px;" />
+    </ColGroup>
+    <HeaderContent>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.TaskId)">Task</MudTableSortLabel></MudTh>
+            @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+            {
+                var i = dayNr;
+                var day = _handleTimeState.Value.Week.StartDay.ToDateTime(TimeOnly.MinValue);
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.Times[i])">@day.AddDays(i).ToString("ddd")</MudTableSortLabel></MudTh>
+            }
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="TaskId">@context.TaskId</MudTd>
-        @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+        @foreach(var time in context.Times)
         {
-            <MudTd DataLabel="@_handleTimeState.Value.Week.StartDay.AddDays(dayNr).ToString("MMM")">@context.Times[dayNr]</MudTd>
+            <MudTd>@time</MudTd>
         }
     </RowTemplate>
     <RowEditingTemplate>
         <MudTd DataLabel="TaskId">@context.TaskId</MudTd>
-        @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+        @for(var dayNr = 0; dayNr < context.Times.Length; dayNr++)
         {
-            <MudTd DataLabel="@_handleTimeState.Value.Week.StartDay.AddDays(dayNr).ToString("MMM")">
-                <MudNumericField @bind-Value="@context.Times[dayNr]" Required />
+            var i = dayNr;
+            <MudTd>
+                <MudNumericField Format="F2" HideSpinButtons="true" @bind-Value="context.Times[i]" T="float" Step="0.25f"/>
             </MudTd>
         }
     </RowEditingTemplate>

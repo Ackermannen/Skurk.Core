@@ -10,7 +10,7 @@ namespace Skurk.Core.Shared.Week
     {
         public DateOnly StartDay { get; set; }
         public DateOnly EndDay { get; set; }
-        public int NumberOfDays => EndDay.DayNumber - StartDay.DayNumber;
+        public int NumberOfDays => EndDay.DayNumber - StartDay.DayNumber + 1;
         public List<TimeTaskDto> TimeTasks { get; set; } = new();
     }
 }
