@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Skurk.Core.Shared", "Skurk.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Skurk.Core.Infrastructure", "Skurk.Core.Infrastructure\Skurk.Core.Infrastructure.csproj", "{763BE692-CA63-4CD8-898A-6208CD847ABA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skurk.Core.Client.State", "Skurk.Core.Client.State\Skurk.Core.Client.State.csproj", "{03DBB23B-DB4C-4684-BF4D-1EE93596573B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Skurk.Core.Client.State", "Skurk.Core.Client.State\Skurk.Core.Client.State.csproj", "{03DBB23B-DB4C-4684-BF4D-1EE93596573B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

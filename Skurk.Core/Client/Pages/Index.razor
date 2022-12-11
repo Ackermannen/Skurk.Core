@@ -9,17 +9,17 @@
 
 <MudText Typo="Typo.h3">Hello, world! The current date is
     
-        @if (_handleTimeState.Value.IsLoadingDate)
+        @if (_state == null || _state.IsLoadingWeek)
         {
             <MudSkeleton Class="d-inline-block" Width="200px" />
         }
         else
         {
-            @_handleTimeState.Value.Date
+            @_state?.Date
         }
 </MudText>
 
-<MudTable Items="@_handleTimeState.Value.Week.TimeTasks" Dense="false" Hover="true" CanCancelEdit="@true"
+<MudTable Items="@_state?.Week.TimeTasks" Dense="false" Hover="true" CanCancelEdit="@true" Loading="_state == null || _state.IsLoadingWeek"
           @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Save row"
           OnCommitEditClick="@(() => _snackbar.Add("Updating row", Severity.Info))" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
           RowEditCommit="ItemHasBeenCommitted" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick">
@@ -29,7 +29,7 @@
     </ToolBarContent>
     <ColGroup>
         <col style="width:350px" />
-        @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+        @for (var dayNr = 0; dayNr < _state?.Week.NumberOfDays; dayNr++)
         {
             <col />
         }
@@ -37,12 +37,15 @@
     </ColGroup>
     <HeaderContent>
             <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.TaskId)">Task</MudTableSortLabel></MudTh>
-            @for (var dayNr = 0; dayNr < _handleTimeState.Value.Week.NumberOfDays; dayNr++)
+        @if(_state != null)
+        {
+            for (var dayNr = 0; dayNr < _state.Week.NumberOfDays; dayNr++)
             {
                 var i = dayNr;
-                var day = _handleTimeState.Value.Week.StartDay.ToDateTime(TimeOnly.MinValue);
+                var day = _state.Week.StartDay.ToDateTime(TimeOnly.MinValue);
                 <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.Times[i])">@day.AddDays(i).ToString("ddd")</MudTableSortLabel></MudTh>
             }
+        }
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="TaskId">@context.TaskId</MudTd>
@@ -72,14 +75,19 @@
 @code {
     private TimeTaskDto selectedItem = default!;
     private TimeTaskDto elementBeforeEdit = default!;
-    private TableEditTrigger editTrigger = TableEditTrigger.RowClick;
+    private HandleTimeState? _state => _handleTimeState.Value;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _dispatcher.Dispatch(new SetDateAction(new GetWeekQuery
-            {
-                Date = DateOnly.FromDateTime(DateTime.Now)
-            }));
+        if (_state == null || _state.Week == null)
+        {
+            _dispatcher.Dispatch(new SetDateAction(new GetWeekQuery
+                {
+                    Date = DateOnly.FromDateTime(DateTime.Now)
+                }));
+        }
+
+        base.OnInitialized();
     }
 
     private void BackupItem(object obj)

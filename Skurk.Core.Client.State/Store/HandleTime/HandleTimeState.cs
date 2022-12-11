@@ -15,11 +15,11 @@ namespace Skurk.Core.Client.State.Store.HandleTime
         {
         }
 
-        public bool IsLoadingDate { get; set; }
+        public bool IsLoadingWeek { get; set; }
 
         public DateOnly Date { get; set; } = DateOnly.MinValue;
 
-        public WeekDto Week { get; set; } = new WeekDto();
+        public WeekDto Week { get; set; } = null!;
 
     }
 }
