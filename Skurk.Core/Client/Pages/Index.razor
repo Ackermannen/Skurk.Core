@@ -1,50 +1,57 @@
 ﻿@page "/"
+@using MediatR;
 @using Skurk.Core.Shared.Week;
-@inherits FluxorComponent
-@inject IDispatcher _dispatcher
-@inject ISnackbar _snackbar;
-@inject IState<HandleTimeState> _handleTimeState
+@inherits StatefulComponent
+@inject ISnackbar _snackbar
+@inject HandleTimeState _state;
+@inject SameSiteClient _client;
 
 <PageTitle>Index</PageTitle>
 
 <MudText Typo="Typo.h3">Hello, world! The current date is
     
-        @if (_state == null || _state.IsLoadingWeek)
+        @if (_state.IsLoadingWeek)
         {
             <MudSkeleton Class="d-inline-block" Width="200px" />
         }
         else
         {
-            @_state?.Date
+            @_state.Date
         }
 </MudText>
 
-<MudTable Items="@_state?.Week.TimeTasks" Dense="false" Hover="true" CanCancelEdit="@true" Loading="_state == null || _state.IsLoadingWeek"
+<MudTable Items="@(_state.Week == null ? new List<TimeTaskDto>() : _state.Week.TimeTasks)" Dense="false" Hover="true" Loading="_state.IsLoadingWeek"
           @bind-SelectedItem="selectedItem" SortLabel="Sort By" CommitEditTooltip="Save row"
           OnCommitEditClick="@(() => _snackbar.Add("Updating row", Severity.Info))" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
-          RowEditCommit="ItemHasBeenCommitted" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.RowClick">
+          RowEditCommit="ItemHasBeenCommitted" ApplyButtonPosition="TableApplyButtonPosition.Start" EditTrigger="TableEditTrigger.RowClick">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Tidsrapport</MudText>
         <MudSpacer />
+        <MudTooltip Text="Add Time row">
+            <MudIconButton Icon="@Icons.Filled.Add" OnClick="AddTimeTask" />
+        </MudTooltip>
+        <MudTooltip Text="Refresh content">
+            <MudIconButton Icon="@Icons.Filled.Refresh" OnClick="ReloadWeek"/>
+        </MudTooltip>
     </ToolBarContent>
     <ColGroup>
         <col style="width:350px" />
-        @for (var dayNr = 0; dayNr < _state?.Week.NumberOfDays; dayNr++)
+        @for (var dayNr = 0; dayNr < _state.Week?.NumberOfDays; dayNr++)
         {
             <col />
         }
         <col style="width:50px;" />
     </ColGroup>
+    <LoadingContent>
+        Loading content...
+    </LoadingContent>
     <HeaderContent>
-            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.TaskId)">Task</MudTableSortLabel></MudTh>
-        @if(_state != null)
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.TaskId)">Task</MudTableSortLabel></MudTh>
+        @for (var dayNr = 0; dayNr < _state.Week?.NumberOfDays; dayNr++)
         {
-            for (var dayNr = 0; dayNr < _state.Week.NumberOfDays; dayNr++)
-            {
-                var i = dayNr;
-                var day = _state.Week.StartDay.ToDateTime(TimeOnly.MinValue);
-                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.Times[i])">@day.AddDays(i).ToString("ddd")</MudTableSortLabel></MudTh>
-            }
+            var i = dayNr;
+            var day = _state.Week.StartDay.ToDateTime(TimeOnly.MinValue);
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<TimeTaskDto, object>(x=>x.Times[i])">@day.AddDays(i).ToString("ddd")</MudTableSortLabel></MudTh>
         }
     </HeaderContent>
     <RowTemplate>
@@ -63,6 +70,11 @@
                 <MudNumericField Format="F2" HideSpinButtons="true" @bind-Value="context.Times[i]" T="float" Step="0.25f"/>
             </MudTd>
         }
+        <MudTd DataLabel="DeleteButton">
+            <MudTooltip>
+                <MudIconButton Icon="@Icons.TwoTone.RemoveCircle" OnClick="() => RemoveTimeTask(context)"/>
+            </MudTooltip>
+        </MudTd>
     </RowEditingTemplate>
     <PagerContent>
         <MudTablePager />
@@ -75,19 +87,41 @@
 @code {
     private TimeTaskDto selectedItem = default!;
     private TimeTaskDto elementBeforeEdit = default!;
-    private HandleTimeState? _state => _handleTimeState.Value;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        if (_state == null || _state.Week == null)
-        {
-            _dispatcher.Dispatch(new SetDateAction(new GetWeekQuery
-                {
-                    Date = DateOnly.FromDateTime(DateTime.Now)
-                }));
-        }
+        RegisterState(_state);
 
-        base.OnInitialized();
+        _state.IsLoadingWeek = true;
+        var date = DateOnly.FromDateTime(DateTime.Now);
+        var result = await _client.Send(new GetWeekQuery
+        {
+            Date = date
+        });
+        _state.Date = date;
+        _state.IsLoadingWeek = false;
+        _state.Week = result.Value;
+
+        await base.OnInitializedAsync();
+    }
+
+    private void AddTimeTask()
+    {
+        _state.Week?.TimeTasks.Add(new TimeTaskDto
+            {
+                Id = Guid.NewGuid(),
+                TaskId = Guid.Empty,
+                Times = new float[_state.Week.NumberOfDays],
+            });
+    }
+
+    private async Task ReloadWeek()
+    {
+    }
+
+    private void RemoveTimeTask(TimeTaskDto task)
+    {
+        _state.Week?.TimeTasks.Remove(task);
     }
 
     private void BackupItem(object obj)

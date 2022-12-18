@@ -14,7 +14,7 @@ using System.Web;
 
 namespace Skurk.Core.Shared.Common
 {
-    internal static class RequestHelper
+    public static class RequestHelper
     {
         public static string BuildQueryString<T>(T obj) where T : class
         {
@@ -58,6 +58,10 @@ namespace Skurk.Core.Shared.Common
             {
                 res = await callback.Invoke(url + queryString, ct);
             }
+            catch (WebException e)
+            {
+                return RequestResult<TResponse>.Fail("No internet connection", HttpStatusCode.NotFound, e);
+            }
             catch (Exception e)
             {
                 return RequestResult<TResponse>.Fail("Error contacting the server", HttpStatusCode.InternalServerError, e);
@@ -73,6 +77,10 @@ namespace Skurk.Core.Shared.Common
             {
                 res = await callback.Invoke(url, stringContent, ct);
             }
+            catch (WebException e)
+            {
+                return RequestResult<TResponse>.Fail("No internet connection", HttpStatusCode.NotFound, e);
+            }
             catch (Exception e)
             {
                 return RequestResult<TResponse>.Fail("Error contacting the server", HttpStatusCode.InternalServerError, e);
@@ -82,96 +90,52 @@ namespace Skurk.Core.Shared.Common
         }
     }
 
-    public record Postable<TResponse> : ICommand<RequestResult<TResponse>>
+    public abstract record Postable<TResponse> : ICommand<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
         {
-            string url;
-            try
-            {
-                url = routeFinder.RequestRoutes[GetType().Name];
-            }
-            catch
-            {
-                return RequestResult<TResponse>.Fail("An error occured",
-                        HttpStatusCode.InternalServerError,
-                        new InvalidOperationException("Route is not registered in assembly"));
-            }
 
             var content = new StringContent(JsonConvert.SerializeObject(this));
-            return await RequestHelper.SendAsBody<TResponse>(url,
+            return await RequestHelper.SendAsBody<TResponse>(route,
                 content,
                 new Func<string, StringContent, CancellationToken, Task<HttpResponseMessage>>(client.PostAsync),
                 ct);
         }
     }
 
-    public record Putable<TResponse> : ICommand<RequestResult<TResponse>>
+    public abstract record Putable<TResponse> : ICommand<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
         {
-            string url;
-            try
-            {
-                url = routeFinder.RequestRoutes[GetType().Name];
-            }
-            catch
-            {
-                return RequestResult<TResponse>.Fail("An error occured",
-                        HttpStatusCode.InternalServerError,
-                        new InvalidOperationException("Route is not registered in assembly"));
-            }
 
             var content = new StringContent(JsonConvert.SerializeObject(this));
-            return await RequestHelper.SendAsBody<TResponse>(url,
+            return await RequestHelper.SendAsBody<TResponse>(route,
                 content,
                 new Func<string, StringContent, CancellationToken, Task<HttpResponseMessage>>(client.PutAsync),
                 ct);
         }
     }
 
-    public record Deletable<TResponse> : ICommand<RequestResult<TResponse>>
+    public abstract record Deletable<TResponse> : ICommand<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
         {
-            string url;
-            try
-            {
-                url = routeFinder.RequestRoutes[GetType().Name];
-            }
-            catch
-            {
-                return RequestResult<TResponse>.Fail("An error occured",
-                        HttpStatusCode.InternalServerError,
-                        new InvalidOperationException("Route is not registered in assembly"));
-            }
 
             var queryString = RequestHelper.BuildQueryString(this);
-            return await RequestHelper.SendAsQuery<TResponse>(url,
+            return await RequestHelper.SendAsQuery<TResponse>(route,
                 queryString,
                 new Func<string, CancellationToken, Task<HttpResponseMessage>>(client.DeleteAsync),
                 ct);
         }
     }
 
-    public record Getable<TResponse> : IQuery<RequestResult<TResponse>>
+    public abstract record Getable<TResponse> : IQuery<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
         {
-            string url;
-            try
-            {
-                url = routeFinder.RequestRoutes[GetType().Name];
-            }
-            catch
-            {
-                return RequestResult<TResponse>.Fail("An error occured",
-                        HttpStatusCode.InternalServerError,
-                        new InvalidOperationException("Route is not registered in assembly"));
-            }
 
             var queryString = RequestHelper.BuildQueryString(this);
-            return await RequestHelper.SendAsQuery<TResponse>(url,
+            return await RequestHelper.SendAsQuery<TResponse>(route,
                 queryString,
                 new Func<string, CancellationToken, Task<HttpResponseMessage>>(client.GetAsync),
                 ct);

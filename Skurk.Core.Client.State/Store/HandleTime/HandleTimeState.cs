@@ -1,25 +1,15 @@
-﻿using Fluxor;
+﻿using Skurk.Core.Client.State.Services;
 using Skurk.Core.Shared.Week;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Skurk.Core.Shared.Week.Queries;
 
 namespace Skurk.Core.Client.State.Store.HandleTime
 {
-    [FeatureState]
-    public record HandleTimeState
+    public class HandleTimeState : StateBase
     {
-        private HandleTimeState()
-        {
-        }
 
         public bool IsLoadingWeek { get; set; }
 
         public DateOnly Date { get; set; } = DateOnly.MinValue;
-
-        public WeekDto Week { get; set; } = null!;
-
+        public WeekDto? Week { get; set; }
     }
 }

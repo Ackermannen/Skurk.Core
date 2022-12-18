@@ -1,9 +1,7 @@
 ﻿@page "/statistics"
 @using Skurk.Core.Shared.Week;
-@inherits FluxorComponent
-@inject IDispatcher _dispatcher
+@inherits StatefulComponent
 @inject ISnackbar _snackbar;
-@inject IState<HandleTimeState> _handleTimeState
 
     <MudText Typo="Typo.h2">Stats</MudText>
 

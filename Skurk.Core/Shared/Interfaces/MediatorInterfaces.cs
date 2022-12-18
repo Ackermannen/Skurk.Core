@@ -1,4 +1,6 @@
 ﻿using MediatR;
+using Newtonsoft.Json;
+using Skurk.Core.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,7 @@ namespace Skurk.Core.Shared.Interfaces
 {
     public interface IMediatorRequest<TResponse> : IRequest<TResponse>
     {
-        public Task<TResponse> Send(HttpClient client, RouteFinder routeFinder, CancellationToken ct = default);
+        public Task<TResponse> Send(HttpClient client, string route, CancellationToken ct = default);
     }
 
     public interface IQuery<TResponse> : IMediatorRequest<TResponse>
