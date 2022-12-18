@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using Newtonsoft.Json;
 using Skurk.Core.Shared.Enums;
 using Skurk.Core.Shared.Interfaces;
 using System;
@@ -7,8 +6,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection.Metadata;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -27,17 +29,21 @@ namespace Skurk.Core.Shared.Common
         {
             try
             {
-                var deserializedResult = JsonConvert.DeserializeObject<JsonResponseValue>(await res.Content.ReadAsStringAsync(ct));
-                if (deserializedResult != default)
+                var resultString = await res.Content.ReadAsStringAsync(ct);
+                var deserializedValue = JsonSerializer.Deserialize<JsonResponseValue>(resultString);
+                var deserializedResult = JsonSerializer.Deserialize<RequestResult<object>>(resultString);
+                if (deserializedResult != null && deserializedValue != null)
                 {
-                    var deserierializedValue = JsonConvert.DeserializeObject<TResponse>(deserializedResult.Value);
-                    if (deserierializedValue != null)
+                    var isSuccess = (bool)deserializedResult.IsSuccess;
+                    var failureReason = (string)deserializedResult.FailureReason;
+                    var objectResult = JsonSerializer.Deserialize<TResponse>(deserializedValue.Value);
+                    if (isSuccess && objectResult is not null)
                     {
-                        return RequestResult<TResponse>.Success(deserierializedValue, res.StatusCode);
+                        return RequestResult<TResponse>.Success(objectResult, res.StatusCode);
                     }
                     else
                     {
-                        throw new InvalidOperationException("Response values aren't parsable");
+                        return RequestResult<TResponse>.Fail(failureReason, res.StatusCode, new InvalidOperationException("Response data isn't parsable"));
                     }
                 }
                 else
@@ -92,12 +98,12 @@ namespace Skurk.Core.Shared.Common
 
     public abstract record Postable<TResponse> : ICommand<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, object content, CancellationToken ct = default)
         {
 
-            var content = new StringContent(JsonConvert.SerializeObject(this));
+            var serializedContent = new StringContent(JsonSerializer.Serialize(content));
             return await RequestHelper.SendAsBody<TResponse>(route,
-                content,
+                serializedContent,
                 new Func<string, StringContent, CancellationToken, Task<HttpResponseMessage>>(client.PostAsync),
                 ct);
         }
@@ -105,12 +111,12 @@ namespace Skurk.Core.Shared.Common
 
     public abstract record Putable<TResponse> : ICommand<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, object content, CancellationToken ct = default)
         {
 
-            var content = new StringContent(JsonConvert.SerializeObject(this));
+            var serializedContent = new StringContent(JsonSerializer.Serialize(content));
             return await RequestHelper.SendAsBody<TResponse>(route,
-                content,
+                serializedContent,
                 new Func<string, StringContent, CancellationToken, Task<HttpResponseMessage>>(client.PutAsync),
                 ct);
         }
@@ -118,10 +124,10 @@ namespace Skurk.Core.Shared.Common
 
     public abstract record Deletable<TResponse> : ICommand<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, object content, CancellationToken ct = default)
         {
 
-            var queryString = RequestHelper.BuildQueryString(this);
+            var queryString = RequestHelper.BuildQueryString(content);
             return await RequestHelper.SendAsQuery<TResponse>(route,
                 queryString,
                 new Func<string, CancellationToken, Task<HttpResponseMessage>>(client.DeleteAsync),
@@ -131,10 +137,10 @@ namespace Skurk.Core.Shared.Common
 
     public abstract record Getable<TResponse> : IQuery<RequestResult<TResponse>>
     {
-        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, CancellationToken ct = default)
+        public async Task<RequestResult<TResponse>> Send(HttpClient client, string route, object content, CancellationToken ct = default)
         {
 
-            var queryString = RequestHelper.BuildQueryString(this);
+            var queryString = RequestHelper.BuildQueryString(content);
             return await RequestHelper.SendAsQuery<TResponse>(route,
                 queryString,
                 new Func<string, CancellationToken, Task<HttpResponseMessage>>(client.GetAsync),
@@ -152,17 +158,17 @@ namespace Skurk.Core.Shared.Common
         [JsonIgnore]
         public TResponse Value { get; set; } = default!;
 
-        [JsonProperty("value")]
-        private string _stringifiedValue => JsonConvert.SerializeObject(Value);
+        [JsonPropertyName("Value")]
+        public string StringifiedValue => JsonSerializer.Serialize(Value);
         public string FailureReason { get; protected set; } = string.Empty;
         [JsonIgnore] public HttpStatusCode HttpStatusCode { get; set; }
         public bool IsSuccess => string.IsNullOrEmpty(FailureReason);
-        [JsonIgnore] protected Exception _storedException { get; set; } = null!;
+        [JsonIgnore] protected Exception StoredException { get; set; } = null!;
 
         public Exception ConsumeError()
         {
-            var ex = _storedException;
-            _storedException = null!;
+            var ex = StoredException;
+            StoredException = null!;
             return ex;
         }
 
@@ -175,7 +181,7 @@ namespace Skurk.Core.Shared.Common
         {
             HttpStatusCode = statusCode,
             FailureReason = reason,
-            _storedException = exception,
+            StoredException = exception,
         };
 
         public static RequestResult<TResponse> Success(TResponse value, HttpStatusCode statusCode) => new()

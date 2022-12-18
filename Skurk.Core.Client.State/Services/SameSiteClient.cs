@@ -1,6 +1,5 @@
 ﻿using MediatR;
 using MudBlazor;
-using Newtonsoft.Json;
 using Skurk.Core.Client.State.Store.Common;
 using Skurk.Core.Shared.Common;
 using Skurk.Core.Shared.Interfaces;
@@ -45,7 +44,7 @@ namespace Skurk.Core.Client.State.Services
                         new InvalidOperationException("Route is not registered in assembly"));
             }
 
-            RequestResult<R> res = await request.Send(_client, url, ct);
+            RequestResult<R> res = await request.Send(_client, url, request, ct);
 
             switch (res.HttpStatusCode)
             {

@@ -20,7 +20,7 @@ namespace Skurk.Core.Shared.Week.Queries
         public Task<RequestResult<WeekDto>> Handle(GetWeekQuery request, CancellationToken cancellationToken)
         {
             var startDay = request.Date;
-            var endDay = DateOnly.FromDayNumber(startDay.DayNumber).AddDays(7);
+            var endDay = DateOnly.FromDayNumber(startDay.DayNumber).AddDays(6);
             return Task.FromResult(RequestResult<WeekDto>.Success(new WeekDto
             {
                 StartDay = startDay,

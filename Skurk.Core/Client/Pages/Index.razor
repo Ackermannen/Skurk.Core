@@ -25,7 +25,9 @@
           OnCommitEditClick="@(() => _snackbar.Add("Updating row", Severity.Info))" RowEditPreview="BackupItem" RowEditCancel="ResetItemToOriginalValues"
           RowEditCommit="ItemHasBeenCommitted" ApplyButtonPosition="TableApplyButtonPosition.Start" EditTrigger="TableEditTrigger.RowClick">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Tidsrapport</MudText>
+        <MudIconButton Icon="@Icons.TwoTone.ArrowLeft" Size="Size.Small" OnClick="() => HandleDayChange(DateOnly.FromDayNumber(_state.Date.DayNumber - 7))"/>
+        <MudText Typo="Typo.h6">@_state.Date</MudText>
+        <MudIconButton Icon="@Icons.TwoTone.ArrowRight" Size="Size.Small" OnClick="() => HandleDayChange(DateOnly.FromDayNumber(_state.Date.DayNumber + 7))" />
         <MudSpacer />
         <MudTooltip Text="Add Time row">
             <MudIconButton Icon="@Icons.Filled.Add" OnClick="AddTimeTask" />
@@ -95,6 +97,12 @@
         await ReloadWeek();
 
         await base.OnInitializedAsync();
+    }
+
+    private async Task HandleDayChange(DateOnly date)
+    {
+        _state.Date = date;
+        await ReloadWeek();
     }
 
     private void AddTimeTask()
