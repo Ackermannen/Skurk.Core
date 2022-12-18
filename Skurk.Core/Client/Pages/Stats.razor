@@ -2,9 +2,21 @@
 @using Skurk.Core.Shared.Week;
 @inherits StatefulComponent
 @inject ISnackbar _snackbar;
+@inject HandleTimeState _state;
 
-    <MudText Typo="Typo.h2">Stats</MudText>
+    <MudText Typo="Typo.h2">Stats: @_state.Date</MudText>
+    <MudButton OnClick="incrementDays"></MudButton>
 
 @code {
+    protected override async Task OnInitializedAsync()
+    {
+        //RegisterState(_state);
 
+        await base.OnInitializedAsync();
+    }
+
+    private void incrementDays()
+    {
+        _state.Date = _state.Date.AddDays(1);
+    }
 }

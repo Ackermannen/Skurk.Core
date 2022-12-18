@@ -16,6 +16,7 @@ namespace Skurk.Core.Client.State.Services
         private readonly ISnackbar _snackbar;
         private readonly CommonState _state;
 
+
         public SameSiteClient(HttpClient client, RouteFinder routeFinder, ISnackbar snackbar, CommonState state)
         {
             _client = client;

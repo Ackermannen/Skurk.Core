@@ -92,15 +92,7 @@
     {
         RegisterState(_state);
 
-        _state.IsLoadingWeek = true;
-        var date = DateOnly.FromDateTime(DateTime.Now);
-        var result = await _client.Send(new GetWeekQuery
-        {
-            Date = date
-        });
-        _state.Date = date;
-        _state.IsLoadingWeek = false;
-        _state.Week = result.Value;
+        await ReloadWeek();
 
         await base.OnInitializedAsync();
     }
@@ -117,6 +109,17 @@
 
     private async Task ReloadWeek()
     {
+        _state.IsLoadingWeek = true;
+        if(_state.Date == DateOnly.MinValue)
+        {
+            _state.Date = DateOnly.FromDateTime(DateTime.Now);
+        }
+        var result = await _client.Send(new GetWeekQuery
+        {
+                Date = _state.Date
+        });
+        _state.Week = result.Value;
+        _state.IsLoadingWeek = false;
     }
 
     private void RemoveTimeTask(TimeTaskDto task)
