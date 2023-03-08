@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.ResponseCompression;
+using Skurk.Core.Server.ControllerGenerator;
 using Skurk.Core.Shared.Week;
 using System.Reflection;
 
@@ -7,7 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(x => x.Conventions.Add(new GenericControllerRouteConvention()))
+    .ConfigureApplicationPartManager(m =>
+            m.FeatureProviders.Add(new GenericTypeControllerFeatureProvider()
+        ));
 builder.Services.AddRazorPages();
 builder.Services.AddMediatR(new Assembly[] { Assembly.GetExecutingAssembly(), typeof(WeekDto).Assembly });
 builder.Services.AddEndpointsApiExplorer();

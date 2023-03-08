@@ -8,7 +8,7 @@ using System.Security.Cryptography;
 
 namespace Skurk.Core.Client.State.Services
 {
-    public class SameSiteClient
+    public class ClientMediator
     {
         private readonly HttpClient _client;
         private readonly RouteFinder _routeFinder;
@@ -16,7 +16,7 @@ namespace Skurk.Core.Client.State.Services
         private readonly CommonState _state;
 
 
-        public SameSiteClient(HttpClient client, RouteFinder routeFinder, ISnackbar snackbar, CommonState state)
+        public ClientMediator(HttpClient client, RouteFinder routeFinder, ISnackbar snackbar, CommonState state)
         {
             _client = client;
             _routeFinder = routeFinder;

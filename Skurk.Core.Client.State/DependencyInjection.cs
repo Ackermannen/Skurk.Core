@@ -21,7 +21,7 @@ namespace Skurk.Core.Client.State
         {
             services.AddScoped<HandleTimeState>();
             services.AddScoped<CommonState>();
-            services.AddScoped(sp => new SameSiteClient(
+            services.AddScoped(sp => new ClientMediator(
                 new HttpClient { BaseAddress = new Uri(hostEnvironment.BaseAddress + GenericConstants.ApiRoutePrefix) },
                 sp.GetRequiredService<RouteFinder>(),
                 sp.GetRequiredService<ISnackbar>(),
